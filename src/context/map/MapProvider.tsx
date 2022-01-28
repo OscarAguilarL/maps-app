@@ -1,5 +1,5 @@
 import { useContext, useEffect, useReducer } from 'react';
-import { Map, Marker, Popup } from 'mapbox-gl';
+import { AnySourceData, LngLatBounds, Map, Marker, Popup } from 'mapbox-gl';
 
 import { MapContext } from './MapContext';
 import { mapReducer } from './mapReducer';
@@ -47,8 +47,6 @@ export const MapProvider = ({ children }: Props) => {
       newMarkers.push(newMarker);
     }
 
-    // todo: limpiar polylines
-
     dispatch({ type: 'setMarkers', payload: newMarkers });
   }, [places]);
 
@@ -77,6 +75,7 @@ export const MapProvider = ({ children }: Props) => {
     );
 
     const { distance, duration, geometry } = resp.data.routes[0];
+    const { coordinates: coords } = geometry;
 
     let kms = distance / 1000;
     kms = Math.round(kms * 100);
@@ -84,6 +83,55 @@ export const MapProvider = ({ children }: Props) => {
 
     const minutes = Math.floor(duration / 60);
     console.log({ kms, minutes });
+
+    const bounds = new LngLatBounds(start, start);
+
+    for (const coord of coords) {
+      const newCord: [number, number] = [coord[0], coord[1]];
+
+      bounds.extend(newCord);
+    }
+
+    state.map?.fitBounds(bounds, { padding: 200 });
+
+    // polyline
+    const sourceData: AnySourceData = {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: coords,
+            },
+          },
+        ],
+      },
+    };
+
+    if (state.map?.getLayer('RouteString')) {
+      state.map.removeLayer('RouteString');
+      state.map.removeSource('RouteString');
+    }
+
+    state.map?.addSource('RouteString', sourceData);
+
+    state.map?.addLayer({
+      id: 'RouteString',
+      type: 'line',
+      source: 'RouteString',
+      layout: {
+        'line-cap': 'round',
+        'line-join': 'round',
+      },
+      paint: {
+        'line-color': 'black',
+        'line-width': 2,
+      },
+    });
   };
 
   return (
