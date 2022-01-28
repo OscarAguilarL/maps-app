@@ -1,11 +1,12 @@
 import { createContext } from 'react';
+import { Feature } from '../../interfaces/places';
 
 export interface PlacesContextProps {
   isLoading: boolean;
   userLocation?: [number, number];
 
   // methods
-  searchPlacesByQuery: (query: string) => Promise<any>;
+  searchPlacesByQuery: (query: string) => Promise<Feature[]>;
 }
 
 export const PlacesContext = createContext<PlacesContextProps>(

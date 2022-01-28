@@ -6,11 +6,11 @@ export const SearchBar = () => {
 
   const debounceRef = useRef<NodeJS.Timeout>();
 
-  const onQueryChange = (ev: ChangeEvent<HTMLInputElement>) => {
+  const onQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
-      searchPlacesByQuery(ev.target.value);
+      searchPlacesByQuery(event.target.value);
     }, 600);
   };
 
